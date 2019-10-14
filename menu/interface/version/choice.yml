@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Title:      PSAutomate
+# Based On:   PGBlitz (Reference Title File)
+# Original Author(s):  Admin9705 - Deiteq 
+# PSAutomate Auther: fattylewis
+# URL:        https://psautomate.io - http://github.psautomate.io
+# GNU:        General Public License v3.0
+################################################################################
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Register Project
+      shell: "cat /psa/var/psa.number"
+      register: serverid
+
+    - name: Installing EDGE
+      git:
+        repo: "https://github.com/psautomateio/PSABlitz.git"
+        dest: "/psa/psautomate"
+        version: Edge
+        force: yes
+      when: serverid.stdout == "edge"
+
+    - name: "Installing Version {{serverid.stdout}}"
+      git:
+        repo: "https://github.com/psautomateio/PSABlitz.git"
+        dest: "/psa/psautomate"
+        version: "{{serverid.stdout}}"
+        force: yes
+      when: not serverid.stdout == "edge"
+      ignore_errors: True
+
+    - name: "Stops First Time Run"
+      shell: "touch /psa/var/ask.yes"
+      register: program

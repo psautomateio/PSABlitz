@@ -1,0 +1,15 @@
+# /etc/systemd/system/psatrakt.service
+
+[Unit]
+Description=psatrakt
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/psa/data/psatrakt
+ExecStart=/usr/bin/python3 /psa/data/psatrakt/psatrakt.py run
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

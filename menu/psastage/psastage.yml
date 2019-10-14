@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: "Cloning PSABlitz"
+      git:
+        repo: "https://github.com/psautomateio/Install.git"
+        dest: "/psa/psastage"
+        version: "master"
+        force: yes

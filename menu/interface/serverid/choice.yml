@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# Title:      PSAutomate
+# Based On:   PGBlitz (Reference Title File)
+# Original Author(s):  Admin9705 - Deiteq - Sub7even
+# PSAutomate Auther: fattylewis
+# URL:        https://psautomate.io - http://github.psautomate.io
+# GNU:        General Public License v3.0
+################################################################################
+---
+- name: Register Project
+  shell: "cat /psa/var/server.id"
+  register: tempid
+
+- name: "Set Server ID"
+  set_fact:
+    serverid: "{{tempid.stdout}}"
+
+- name: "Key Menu Facts"
+  set_fact:
+    head1: "\nPSA Server Identification Interface"
+    head2: "\nServer ID: {{serverid}}"
+    info2: "\n2.  Server ID: Change It"

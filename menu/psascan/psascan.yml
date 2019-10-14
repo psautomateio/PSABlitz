@@ -1,0 +1,98 @@
+#!/bin/bash
+#
+# Title:      PSAutomate
+# Based On:   PGBlitz (Reference Title File)
+# Original Author(s):  Admin9705 - Deiteq - Sub7even
+# PSAutomate Auther: fattylewis
+# URL:        https://psautomate.io - http://github.psautomate.io
+# GNU:        General Public License v3.0
+# Origin:     https://github.com/l3uddz/plexautoscan
+################################################################################
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    # FACTS ######################################################################
+    - name: "Set Known Facts"
+      set_fact:
+        psarole: "psascan"
+        extport: "0"
+
+    - name: Token Recall
+      shell: "cat /psa/var/plex.token"
+      register: token
+
+    - name: Install pip requirements
+      pip:
+        requirements: /psa/psablitz/menu/psascan/requirements.txt
+        executable: pip2
+
+    - name: "Including cron job"
+      include_tasks: "/psa/coreapps/apps/_core.yml"
+
+    - name: Create Basic Directories
+      file: "path={{item}} state=directory mode=0775 owner=1000 group=1000"
+      with_items:
+        - "/psa/data/psascan/"
+
+    - name: Transfer Files
+      copy:
+        src: /psa/psablitz/menu/psascan
+        dest: /psa/data
+        owner: "1000"
+        group: "1000"
+        mode: a+x
+        force: yes
+
+    - name: Import default config
+      template:
+        src: /psa/data/psascan/config/default.config
+        dest: /psa/data/psascan/config.json
+        owner: "1000"
+        group: "1000"
+        mode: 0775
+        force: yes
+
+    - name: Set psascan.py as executable
+      file:
+        path: /psa/data/psascan/scan.py
+        owner: '1000'
+        group: '1000'
+        mode: a+x
+
+    - name: "Create /usr/local/bin symlink"
+      file:
+        src: "/psa/data/psascan/scan.py"
+        dest: "/bin/psascan"
+        state: link
+
+    - name: Check Service's Existance
+      stat:
+        path: "/etc/systemd/systemd/psascan.service"
+      register: pgp
+
+    - name: Stop service
+      service:
+        name: psascan
+        state: stopped
+      when: pgp.stat.exists
+
+    - name: psascan Service
+      template:
+        src: /psa/data/psascan/system/psascan.service
+        dest: /etc/systemd/system/psascan.service
+        force: yes
+
+    - name: Daemon-Reload
+      systemd: state=stopped name=psascan daemon_reload=yes enabled=no
+
+    - name: Section Updates
+      command: "/psa/data/psascan/scan.py sections"
+      tags: plex_autoscan_update_sections
+
+    - name: Mapping Configs
+      command: "/psa/data/psascan/scan.py update_sections"
+      tags: plex_autoscan_update_sections
+
+    - name: Start psascan
+      systemd: state=started name=psascan enabled=yes

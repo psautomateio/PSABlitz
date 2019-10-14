@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Title:      PSAutomate
+# Based On:   PGBlitz (Reference Title File)
+# Original Author(s):  Admin9705 - Deiteq
+# PSAutomate Auther: fattylewis
+# URL:        https://psautomate.io - http://github.psautomate.io
+# GNU:        General Public License v3.0
+################################################################################
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+
+# KEY VARIABLES ################################################################
+  - name: Set PSARole
+    shell: "cat /psa/tmp/program_var"
+    register: psarole
+
+  - name: Set PSARole
+    shell: "cat /psa/var/cron/cron.hour"
+    register: cronhour
+
+  - name: Set PSARole
+    shell: "cat /psa/var/cron/cron.minute"
+    register: cronminute
+
+  - name: Set PSARole
+    shell: "cat /psa/var/cron/cron.day"
+    register: cronday
+
+# CRON START ###################################################################
+#  - name: Build Cron Job File
+#    shell: echo "ansible-playbook /psa/pgblitz/menu/cron/bcron.yml --extra-vars 'program_var={{psarole.stdout}}'" > /psa/var/cron/{{psarole.stdout}}
+
+  - name: Build Cron Job Schedule
+    cron:
+      name: "{{psarole.stdout}}"
+      weekday: "{{cronday.stdout}}"
+      minute: "{{cronminute.stdout}}"
+      hour: "{{cronhour.stdout}}"
+      user: root
+      job: "echo {{psarole.stdout}} > /psa/tmp/program_var && bash /psa/psavault/psacron"
+      state: present
+    become_user: root

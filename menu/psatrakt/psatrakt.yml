@@ -1,0 +1,140 @@
+#!/bin/bash
+#
+# Title:      PGBlitz (Reference Title File)
+# YML Author: Admin9705
+# URL:        https://pgblitz.com - http://github.pgblitz.com
+# GNU:        General Public License v3.0
+# Origin:     https://github.com/l3uddz/plex_patrol
+################################################################################
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    # FACTS ######################################################################
+    - name: "Set Known Facts"
+      set_fact:
+        psarole: "psatrakt"
+        extport: "0"
+
+    - name: Server ID
+      shell: "cat /psa/var/psa.serverid"
+      register: serverid
+
+    - name: Token Recall
+      shell: "cat /psa/var/plex.token"
+      register: plextoken
+
+    - name: Recall User
+      shell: "cat /psa/var/plex.user"
+      register: user
+
+    - name: Register IP
+      shell: "cat /psa/var/server.ip"
+      register: ipaddress
+
+    - name: Sonarr API
+      shell: "cat /psa/var/psatrak.sapi"
+      register: sapi
+      ignore_errors: True
+
+    - name: Radarr API
+      shell: "cat /psa/var/psatrak.rapi"
+      register: rapi
+      ignore_errors: True
+
+    - name: Sonarr Profile
+      shell: "cat /psa/var/psatrak.sprofile"
+      register: sprofile
+      ignore_errors: True
+
+    - name: Radarr Profile
+      shell: "cat /psa/var/psatrak.rprofile"
+      register: rprofile
+      ignore_errors: True
+
+    - name: Trakt.tv Client
+      shell: "cat /psa/var/psatrak.client"
+      register: client
+      ignore_errors: True
+
+    - name: Trakt.tv Secret
+      shell: "cat /psa/var/psatrak.secret"
+      register: secret
+      ignore_errors: True
+
+    - name: Radarr Path
+      shell: "cat /psa/var/psatrak.rpath"
+      register: rpath
+      ignore_errors: True
+
+    - name: API Sonnar
+      shell: "cat /psa/var/psatrak.spath"
+      register: spath
+      ignore_errors: True
+
+    - name: Install pip requirements
+      pip:
+        requirements: /psa/psablitz/menu/psatrakt/requirements.txt
+        executable: pip3
+
+    - name: "Including cron job"
+      include_tasks: "/psa/coreapps/apps/_core.yml"
+
+    - name: Create Basic Directories
+      file: "path={{item}} state=directory mode=0775 owner=1000 group=1000"
+      with_items:
+        - "/psa/data/psatrakt/"
+
+    - name: Transfer Files
+      copy:
+        src: /psa/psablitz/menu/psatrakt
+        dest: /psa/data
+        owner: "1000"
+        group: "1000"
+        mode: a+x
+        force: yes
+
+    - name: Import default config
+      template:
+        src: /psa/data/psatrakt/config.json.sample
+        dest: /psa/data/psatrakt/config.json
+        owner: "1000"
+        group: "1000"
+        mode: 0775
+        force: yes
+
+    - name: Set psatrak.py as executable
+      file:
+        path: /psa/data/psatrakt/psatrakt.py
+        owner: '1000'
+        group: '1000'
+        mode: a+x
+
+    - name: "Create /usr/local/bin symlink"
+      file:
+        src: "/psa/data/psatrakt/psatrakt.py"
+        dest: "/bin/psatrakt"
+        state: link
+
+    - name: Check Service's Existance
+      stat:
+        path: "/etc/systemd/systemd/psatrakt.service"
+      register: pgp
+
+    - name: Stop service
+      service:
+        name: psatrakt
+        state: stopped
+      when: pgp.stat.exists
+
+    - name: PSATrakt Service
+      template:
+        src: /psa/data/psatrakt/systemd/psatrakt.service
+        dest: /etc/systemd/system/psatrakt.service
+        force: yes
+
+    - name: Daemon-Reload
+      systemd: state=stopped name=psatrakt daemon_reload=yes enabled=no
+
+    - name: Start PSATrakt
+      systemd: state=started name=psatrakt enabled=yes

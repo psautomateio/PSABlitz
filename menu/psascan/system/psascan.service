@@ -1,0 +1,17 @@
+# /etc/systemd/system/psascan.service
+
+[Unit]
+Description=Plex Autoscan
+After=network-online.target unionfs.service
+
+[Service]
+User=1000
+Group=1000
+Type=simple
+WorkingDirectory=/psa/data/psascan/
+ExecStart=/psa/data/psascan/scan.py server --loglevel=INFO
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
