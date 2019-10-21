@@ -7,5 +7,5 @@
       git:
         repo: "https://github.com/psautomateio/Install.git"
         dest: "/psa/psastage"
-        version: "master"
+        version: "0.2.0"
         force: yes
