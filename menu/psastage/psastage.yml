@@ -3,7 +3,7 @@
   gather_facts: false
   tasks:
 
-    - name: "Cloning PSABlitz"
+    - name: "Cloning PSABlitz 0.2.0"
       git:
         repo: "https://github.com/psautomateio/Install.git"
         dest: "/psa/psastage"
